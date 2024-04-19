@@ -1,5 +1,6 @@
 use aiken/transaction/value.{AssetName, PolicyId}
-use common/types.{Lovelace}
+use bond/types.{BondType}
+use common/types.{Lovelace, ScriptKeyHash} as common_types
 
 pub type TradeAction {
   Update
@@ -12,4 +13,19 @@ pub type TradeAction {
   }
   Upgrade
   GarbageCollector
+}
+
+pub type WithdrawAction {
+  SellMulti { bid_skh: ScriptKeyHash }
+}
+
+pub type EscrowInfo {
+  bond_symbol: PolicyId,
+  token_name: AssetName,
+  bond_amount: Int,
+  start_epoch: Int,
+  end_epoch: Int,
+  value_at_maturity: Int,
+  day_to_maturity: Int,
+  bond_type: BondType,
 }
