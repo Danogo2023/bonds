@@ -27,6 +27,7 @@ use common/time.{
 use common/types.{
   AssetUnit, Error, Lovelace, OK, PublicKeyHash, Result, ScriptKeyHash,
 } as ctypes
+use debug
 
 pub fn constraint(
   ctx: ScriptContext,
@@ -47,6 +48,7 @@ pub fn constraint(
         posix_time_to_relative_epoch(tx_time_valid, cfg.platform.epoch)
       let input_dt = sum_input_dt(tx, cfg, bid_skh)
       let output_dt = sum_output_dt(tx, cfg, tx_time_valid, epo_curr, bid_skh)
+      trace @"get output dt"
       let escrow_bond =
         get_escrow_bond_from_ref(
           tx,
@@ -65,6 +67,8 @@ pub fn constraint(
           escrow_bond,
           output_dt.bid_by_idx,
         )
+      trace @"get redeemer dt"
+
       let min_ada = cfg.platform.min_ada * cfg.platform.one_ada_2_lovelace
       let is_buyer_data_valid =
         list.foldl(
@@ -81,7 +85,7 @@ pub fn constraint(
               z,
               (ibid_lovelace - exchange_fee - seller_receive == buyer_lovelace + obid_lovelace)?,
               contains(redeemer_bond, value)?,
-              !list.has(input_dt.vk_input, buyer_vk)?,
+              (list.has(input_dt.vk_input, buyer_vk) == False)?,
               if
               VerificationKeyCredential(buyer_vk) == cfg.exchange.fee_addr.payment_credential{
               
@@ -127,6 +131,10 @@ fn sum(_k, a, b) {
   Some(a + b)
 }
 
+fn sum_bid_by_idx(_k, _a, b) {
+  Some(b)
+}
+
 fn get_buyer_data(buyer_vk: PublicKeyHash, data: Dict<PublicKeyHash, a>) -> a {
   when dict.get(data, buyer_vk) is {
     None -> fail @"data of buyer is invalid"
@@ -161,6 +169,7 @@ fn sum_output_dt(
         }
       } else if o.address.payment_credential == ScriptCredential(bid_skh) {
         expect odt: BidLimitMulti = data.output_datum(o)
+        debug.int(idx, @"idx output")
         OutputDt {
           ..z,
           data_by_owner: dict.insert_with(
@@ -170,7 +179,13 @@ fn sum_output_dt(
             sum_output,
             bytearray.compare,
           ),
-          bid_by_idx: dict.insert(z.bid_by_idx, idx, o, int.compare),
+          bid_by_idx: dict.insert_with(
+            z.bid_by_idx,
+            idx,
+            o,
+            sum_bid_by_idx,
+            int.compare,
+          ),
         }
       } else {
         when o.address.payment_credential is {
@@ -456,8 +471,11 @@ fn sum_redeemer_dt(
           if
           ibid.output.address.payment_credential == ScriptCredential(bid_skh){
           
+            trace @"before expect"
             expect ibid_dt: BidLimitMulti = data.input_datum(ibid)
             expect r: TradeAction = redeemer
+            trace @"after expect"
+
             when r is {
               Sell { exchange_fee, seller_receive, offers, cont_idx } -> {
                 let bond_by_owner =
@@ -472,6 +490,7 @@ fn sum_redeemer_dt(
                       }
                     },
                   )
+                trace @"after bond by owner"
                 if
                 is_redeemer_valid(
                   ibid,
@@ -486,6 +505,7 @@ fn sum_redeemer_dt(
                   bid_by_idx,
                 ){
                 
+                  trace @"redeener valid"
                   let sum_redeemer =
                     fn(
                       _k,
@@ -513,6 +533,7 @@ fn sum_redeemer_dt(
                         bytearray.compare,
                       ),
                     }
+                  debug.data(cont_idx, @"cont_idx")
                   when cont_idx is {
                     Some(i) ->
                       when dict.get(z.cont_idx_set, i) is {
@@ -588,6 +609,9 @@ fn is_redeemer_valid(
       },
     )
   let min_ada = cfg.platform.min_ada * cfg.platform.one_ada_2_lovelace
+  debug.data(cont_bid_idx, @"cont_bid_idx")
+  debug.data(bid_by_idx, @"bid_by_idx")
+
   and {
     (ibid_dt.quantity - sell_qty >= 0)?,
     (want_exchange_fee == exchange_fee)?,
@@ -597,15 +621,21 @@ fn is_redeemer_valid(
       Some(idx) ->
         when dict.get(bid_by_idx, idx) is {
           Some(obid) -> {
+            bid_by_idx |> debug.data(@"bid_by_idx")
+            trace @"before expect obid_dt"
+            None |> debug.data(@"None cbor")
+            debug.data(obid, @"obid")
+
             expect obid_dt: BidLimitMulti = data.output_datum(obid)
+            debug.data(obid_dt, @"obid_dt")
             and {
               yield_valid(cfg.platform.basis, obid_dt.requested_yield)?,
               epoch_valid(
                 obid_dt.from_epoch,
                 obid_dt.to_epoch,
                 obid_dt.quantity,
-              ),
-              bid_limit_multi_valid(obid_dt, ibid_dt),
+              )?,
+              bid_limit_multi_valid(obid_dt, ibid_dt)?,
               (obid_dt.quantity > 0)?,
               (value.lovelace_of(in_bid.output.value) - seller_receive - exchange_fee - min_ada <= value.lovelace_of(
                 obid.value,
