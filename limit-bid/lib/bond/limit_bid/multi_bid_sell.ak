@@ -2,7 +2,6 @@ use aiken/bytearray
 use aiken/dict.{Dict}
 use aiken/int
 use aiken/list
-use aiken/string as astring
 use aiken/time.{PosixTime}
 use aiken/transaction.{
   DatumHash, InlineDatum, Input, NoDatum, Output, ScriptContext, Spend,
@@ -125,7 +124,7 @@ type OutputDt {
   // Lovelace, bid lovelace, value
   data_by_owner: Dict<PublicKeyHash, (Lovelace, Lovelace, Value)>,
   escrow_bond: Dict<AssetUnit, EscrowInfo>,
-  bid_by_idx: Dict<ByteArray, Output>,
+  bid_by_idx: Dict<Int, (BidLimitMulti, Lovelace)>,
 }
 
 fn sum(_k, a, b) {
@@ -161,13 +160,16 @@ fn sum_output_dt(
         }
       if o.address == cfg.exchange.fee_addr {
         OutputDt {
-          ..z,
+          bid_by_idx: z.bid_by_idx,
+          data_by_owner: z.data_by_owner,
+          escrow_bond: z.escrow_bond,
           sum_exchange_fee: z.sum_exchange_fee + value.lovelace_of(o.value),
         }
       } else if o.address.payment_credential == bid_sc {
         expect odt: BidLimitMulti = data.output_datum(o)
         OutputDt {
-          ..z,
+          sum_exchange_fee: z.sum_exchange_fee,
+          escrow_bond: z.escrow_bond,
           data_by_owner: dict.insert_with(
             z.data_by_owner,
             odt.owner_vk,
@@ -177,9 +179,9 @@ fn sum_output_dt(
           ),
           bid_by_idx: dict.insert(
             z.bid_by_idx,
-            astring.from_int(idx) |> astring.to_bytearray,
-            o,
-            bytearray.compare,
+            idx,
+            (odt, value.lovelace_of(o.value)),
+            int.compare,
           ),
         }
       } else {
@@ -198,7 +200,9 @@ fn sum_output_dt(
                     bond_type,
                   )
                 OutputDt {
-                  ..z,
+                  data_by_owner: z.data_by_owner,
+                  bid_by_idx: z.bid_by_idx,
+                  sum_exchange_fee: z.sum_exchange_fee,
                   escrow_bond: dict.insert(
                     z.escrow_bond,
                     bond_unit,
@@ -211,7 +215,9 @@ fn sum_output_dt(
             }
           VerificationKeyCredential(k) ->
             OutputDt {
-              ..z,
+              sum_exchange_fee: z.sum_exchange_fee,
+              escrow_bond: z.escrow_bond,
+              bid_by_idx: z.bid_by_idx,
               data_by_owner: dict.insert_with(
                 z.data_by_owner,
                 k,
@@ -423,7 +429,7 @@ fn sum_input_dt(
       } else if i.output.address.payment_credential == bid_sc {
         expect idt: BidLimitMulti = data.input_datum(i)
         InputDt {
-          ..z,
+          vk_input: z.vk_input,
           sum_bid_lovelace_by_owner: dict.insert_with(
             z.sum_bid_lovelace_by_owner,
             idt.owner_vk,
@@ -435,7 +441,10 @@ fn sum_input_dt(
       } else {
         when i.output.address.payment_credential is {
           VerificationKeyCredential(k) ->
-            InputDt { ..z, vk_input: [k, ..z.vk_input] }
+            InputDt {
+              sum_bid_lovelace_by_owner: z.sum_bid_lovelace_by_owner,
+              vk_input: [k, ..z.vk_input],
+            }
           _ -> z
         }
       }
@@ -449,7 +458,7 @@ fn sum_redeemer_dt(
   cfg: BondConfigLimit,
   epo_curr: PosixTime,
   escrow_bond: Dict<AssetUnit, EscrowInfo>,
-  bid_by_idx: Dict<ByteArray, Output>,
+  bid_by_idx: Dict<Int, (BidLimitMulti, Lovelace)>,
 ) -> RedeemerDt {
   dict.foldl(
     tx.redeemers,
@@ -513,7 +522,7 @@ fn sum_redeemer_dt(
                     }
                   let r =
                     RedeemerDt {
-                      ..z,
+                      cont_idx_set: z.cont_idx_set,
                       sum_exchange_fee: z.sum_exchange_fee + exchange_fee,
                       buyer: dict.insert(
                         z.buyer,
@@ -572,7 +581,7 @@ fn is_redeemer_valid(
   escrow_bond: Dict<AssetUnit, EscrowInfo>,
   cont_bid_idx: Option<Int>,
   epo_curr: PosixTime,
-  bid_by_idx: Dict<ByteArray, Output>,
+  bid_by_idx: Dict<Int, (BidLimitMulti, Lovelace)>,
 ) {
   let (sell_qty, want_exchange_fee, want_seller_receive) =
     list.foldl(
@@ -611,12 +620,8 @@ fn is_redeemer_valid(
     when cont_bid_idx is {
       None -> True
       Some(idx) ->
-        when
-          dict.get(bid_by_idx, astring.from_int(idx) |> astring.to_bytearray)
-        is {
-          Some(obid) -> {
-            expect obid_dt: BidLimitMulti = data.output_datum(obid)
-            and {
+        when dict.get(bid_by_idx, idx) is {
+          Some((obid_dt, lovelace)) -> and {
               yield_valid(cfg.platform.basis, obid_dt.requested_yield)?,
               epoch_valid(
                 obid_dt.from_epoch,
@@ -625,11 +630,8 @@ fn is_redeemer_valid(
               )?,
               bid_limit_multi_valid(obid_dt, ibid_dt)?,
               (obid_dt.quantity > 0)?,
-              (value.lovelace_of(in_bid.output.value) - seller_receive - exchange_fee - min_ada <= value.lovelace_of(
-                obid.value,
-              ))?,
+              (value.lovelace_of(in_bid.output.value) - seller_receive - exchange_fee - min_ada <= lovelace)?,
             }
-          }
           None -> fail @"cont idx is invalid"
         }
     },

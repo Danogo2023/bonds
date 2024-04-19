@@ -861,7 +861,7 @@ test succ_multiple_sellers_same_bonds() {
   )
 }
 
-test succ_multiple_sellers_different_bonds_with_10_bids() {
+test succ_multiple_sellers_different_bonds_with_6_bids() {
   let cfg = get_config_limit_mainnet()
   let fee_addr = cfg.exchange.fee_addr
   expect [(bond_pid, _bond_type)] = dict.values(cfg.escrow)
@@ -1607,17 +1607,6 @@ test succ_spending_partially_and_fully() {
       ),
     }
   let bid_2 = get_bid_datum(ibid_2.output)
-  let obid_1_remain =
-    Input {
-      output_reference: OutputReference(TransactionId("tx_bid_1"), 0),
-      output: bid_like(
-        yield: 10,
-        owner: "owner_1",
-        from_epoch: 400,
-        to_epoch: 500,
-        quantity: bid_1.quantity - bond_sell_qty_1,
-      ),
-    }
   let oescrow =
     escrow_like(
       epo_rewards: 1 * ada,
@@ -1666,12 +1655,19 @@ test succ_spending_partially_and_fully() {
       datum: NoDatum,
       reference_script: None,
     }
-  let obid_1 = obid_1_remain.output
+  let obid_1 =
+    bid_like(
+      yield: 10,
+      owner: "owner_1",
+      from_epoch: 400,
+      to_epoch: 500,
+      quantity: bid_1.quantity - bond_sell_qty_1,
+    )
   let obuyer_1 =
     Output {
       value: value.lovelace_of(ibid_1.output.value) + value.lovelace_of(
         ibid_2.output.value,
-      ) - value.lovelace_of(obid_1_remain.output.value) - bid_1_fee - bid_2_fee - seller_1_receive - seller_2_receive
+      ) - value.lovelace_of(obid_1.value) - bid_1_fee - bid_2_fee - seller_1_receive - seller_2_receive
         |> value.from_lovelace
         |> value.add(bond_pid, bond_name, bond_sell_qty_1)
         |> value.add(bond_pid, bond_name, bid_2.quantity),
