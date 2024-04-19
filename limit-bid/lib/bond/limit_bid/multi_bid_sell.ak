@@ -9,7 +9,7 @@ use aiken/transaction.{
   Transaction,
 }
 use aiken/transaction/credential.{
-  Address, ScriptCredential, VerificationKeyCredential,
+  Address, Credential, ScriptCredential, VerificationKeyCredential,
 }
 use aiken/transaction/value.{AssetName, PolicyId, Value}
 use bond/constraint.{bid_limit_multi_valid, epoch_valid, yield_valid}
@@ -44,12 +44,11 @@ pub fn constraint(
     )
   is {
     OK(tx_time_valid) -> {
+      let bid_sc = ScriptCredential(bid_skh)
       let epo_curr: EpochTime =
         posix_time_to_relative_epoch(tx_time_valid, cfg.platform.epoch)
-      let input_dt = sum_input_dt(tx, cfg, bid_skh)
-      trace @"get input"
-      let output_dt = sum_output_dt(tx, cfg, tx_time_valid, epo_curr, bid_skh)
-      trace @"get output_dt"
+      let input_dt = sum_input_dt(tx, cfg, bid_sc)
+      let output_dt = sum_output_dt(tx, cfg, tx_time_valid, epo_curr, bid_sc)
 
       let escrow_bond =
         get_escrow_bond_from_ref(
@@ -59,7 +58,6 @@ pub fn constraint(
           tx_time_valid,
           epo_curr,
         )
-      trace @"get escrow_bond"
 
       // validate for each bid redeemer
       let redeemer_dt =
@@ -71,14 +69,13 @@ pub fn constraint(
           escrow_bond,
           output_dt.bid_by_idx,
         )
-      trace @"get redeemer_dt"
 
       let min_ada = cfg.platform.min_ada * cfg.platform.one_ada_2_lovelace
       let is_buyer_data_valid =
-        list.foldl(
+        dict.foldl(
           redeemer_dt.buyer,
           True,
-          fn(buyer_vk, z) {
+          fn(buyer_vk, _v, z) {
             let (exchange_fee, seller_receive, redeemer_bond) =
               get_buyer_data(buyer_vk, redeemer_dt.data_by_owner)
             let (buyer_lovelace, obid_lovelace, value) =
@@ -100,7 +97,6 @@ pub fn constraint(
             }
           },
         )
-      trace @"before end"
       and {
         (redeemer_dt.sum_exchange_fee <= output_dt.sum_exchange_fee)?,
         is_buyer_data_valid?,
@@ -121,7 +117,7 @@ type RedeemerDt {
   // exchange_fee, seller_receive, offer
   data_by_owner: Dict<PublicKeyHash, (Lovelace, Lovelace, Value)>,
   cont_idx_set: Dict<Int, Void>,
-  buyer: List<PublicKeyHash>,
+  buyer: Dict<PublicKeyHash, Void>,
 }
 
 type OutputDt {
@@ -148,7 +144,7 @@ fn sum_output_dt(
   cfg: BondConfigLimit,
   tx_time_valid: PosixTime,
   epo_curr: PosixTime,
-  bid_skh: ScriptKeyHash,
+  bid_sc: Credential,
 ) -> OutputDt {
   list.indexed_foldr(
     tx.outputs,
@@ -168,7 +164,7 @@ fn sum_output_dt(
           ..z,
           sum_exchange_fee: z.sum_exchange_fee + value.lovelace_of(o.value),
         }
-      } else if o.address.payment_credential == ScriptCredential(bid_skh) {
+      } else if o.address.payment_credential == bid_sc {
         expect odt: BidLimitMulti = data.output_datum(o)
         OutputDt {
           ..z,
@@ -416,7 +412,7 @@ pub fn get_escrow_info(
 fn sum_input_dt(
   tx: Transaction,
   cfg: BondConfigLimit,
-  bid_skh: ScriptKeyHash,
+  bid_sc: Credential,
 ) -> InputDt {
   list.foldl(
     tx.inputs,
@@ -424,7 +420,7 @@ fn sum_input_dt(
     fn(i, z) {
       if i.output.address == cfg.exchange.fee_addr {
         fail @"exchange input is not allowed"
-      } else if i.output.address.payment_credential == ScriptCredential(bid_skh) {
+      } else if i.output.address.payment_credential == bid_sc {
         expect idt: BidLimitMulti = data.input_datum(i)
         InputDt {
           ..z,
@@ -460,7 +456,7 @@ fn sum_redeemer_dt(
     RedeemerDt {
       data_by_owner: dict.new(),
       cont_idx_set: dict.new(),
-      buyer: [],
+      buyer: dict.new(),
       sum_exchange_fee: 0,
     },
     fn(purpose, redeemer, z) {
@@ -519,7 +515,12 @@ fn sum_redeemer_dt(
                     RedeemerDt {
                       ..z,
                       sum_exchange_fee: z.sum_exchange_fee + exchange_fee,
-                      buyer: [ibid_dt.owner_vk, ..z.buyer],
+                      buyer: dict.insert(
+                        z.buyer,
+                        ibid_dt.owner_vk,
+                        Void,
+                        bytearray.compare,
+                      ),
                       data_by_owner: dict.insert_with(
                         z.data_by_owner,
                         ibid_dt.owner_vk,

@@ -861,6 +861,412 @@ test succ_multiple_sellers_same_bonds() {
   )
 }
 
+test succ_multiple_sellers_different_bonds_with_10_bids() {
+  let cfg = get_config_limit_mainnet()
+  let fee_addr = cfg.exchange.fee_addr
+  expect [(bond_pid, _bond_type)] = dict.values(cfg.escrow)
+  let bond_name_1 = "bond_name_1"
+  let bond_name_2 = "bond_name_2"
+  let bond_name_3 = "bond_name_3"
+  let bond_name_4 = "bond_name_4"
+  let bond_name_5 = "bond_name_5"
+  let bond_name_6 = "bond_name_6"
+  let ibid_1 =
+    Input {
+      output_reference: OutputReference(TransactionId("tx_bid_1"), 0),
+      output: bid_like(
+        yield: 10,
+        owner: "owner_1",
+        from_epoch: 400,
+        to_epoch: 500,
+        quantity: 10,
+      ),
+    }
+  let bid_1 = get_bid_datum(ibid_1.output)
+  let ibid_2 =
+    Input {
+      output_reference: OutputReference(TransactionId("tx_bid_2"), 1),
+      output: bid_like(
+        yield: 10,
+        owner: "owner_1",
+        from_epoch: 400,
+        to_epoch: 500,
+        quantity: 10,
+      ),
+    }
+  let bid_2 = get_bid_datum(ibid_2.output)
+  let ibid_3 =
+    Input {
+      output_reference: OutputReference(TransactionId("tx_bid_3"), 1),
+      output: bid_like(
+        yield: 10,
+        owner: "owner_3",
+        from_epoch: 400,
+        to_epoch: 500,
+        quantity: 10,
+      ),
+    }
+  let bid_3 = get_bid_datum(ibid_3.output)
+  let ibid_4 =
+    Input {
+      output_reference: OutputReference(TransactionId("tx_bid_4"), 1),
+      output: bid_like(
+        yield: 10,
+        owner: "owner_4",
+        from_epoch: 400,
+        to_epoch: 500,
+        quantity: 10,
+      ),
+    }
+  let bid_4 = get_bid_datum(ibid_4.output)
+  let ibid_5 =
+    Input {
+      output_reference: OutputReference(TransactionId("tx_bid_5"), 1),
+      output: bid_like(
+        yield: 10,
+        owner: "owner_5",
+        from_epoch: 400,
+        to_epoch: 500,
+        quantity: 10,
+      ),
+    }
+  let bid_5 = get_bid_datum(ibid_5.output)
+  let ibid_6 =
+    Input {
+      output_reference: OutputReference(TransactionId("tx_bid_6"), 1),
+      output: bid_like(
+        yield: 10,
+        owner: "owner_6",
+        from_epoch: 400,
+        to_epoch: 500,
+        quantity: 10,
+      ),
+    }
+  let bid_6 = get_bid_datum(ibid_6.output)
+  let oescrow_1 =
+    escrow_like(
+      epo_rewards: 1 * ada,
+      start: 10,
+      duration: 150,
+      bond_amount: 100,
+      bond_symbol: bond_pid,
+      token_name: bond_name_1,
+      buffer: 10,
+    )
+  let oescrow_2 =
+    escrow_like(
+      epo_rewards: 1 * ada,
+      start: 10,
+      duration: 150,
+      bond_amount: 100,
+      bond_symbol: bond_pid,
+      token_name: bond_name_2,
+      buffer: 10,
+    )
+  let oescrow_3 =
+    escrow_like(
+      epo_rewards: 1 * ada,
+      start: 10,
+      duration: 150,
+      bond_amount: 100,
+      bond_symbol: bond_pid,
+      token_name: bond_name_3,
+      buffer: 10,
+    )
+  let oescrow_4 =
+    escrow_like(
+      epo_rewards: 1 * ada,
+      start: 10,
+      duration: 150,
+      bond_amount: 100,
+      bond_symbol: bond_pid,
+      token_name: bond_name_4,
+      buffer: 10,
+    )
+  let oescrow_5 =
+    escrow_like(
+      epo_rewards: 1 * ada,
+      start: 10,
+      duration: 150,
+      bond_amount: 100,
+      bond_symbol: bond_pid,
+      token_name: bond_name_5,
+      buffer: 10,
+    )
+  let oescrow_6 =
+    escrow_like(
+      epo_rewards: 1 * ada,
+      start: 10,
+      duration: 150,
+      bond_amount: 100,
+      bond_symbol: bond_pid,
+      token_name: bond_name_6,
+      buffer: 10,
+    )
+  let iseller_1 =
+    Input {
+      output_reference: OutputReference(TransactionId("tx_seller_1"), 1),
+      output: Output {
+        value: value.from_lovelace(2 * ada)
+          |> value.add(bond_pid, bond_name_1, 50),
+        address: from_verification_key("seller_1_pk"),
+        datum: NoDatum,
+        reference_script: None,
+      },
+    }
+  let iseller_2 =
+    Input {
+      output_reference: OutputReference(TransactionId("tx_seller_2"), 1),
+      output: Output {
+        value: value.from_lovelace(2 * ada)
+          |> value.add(bond_pid, bond_name_2, 50),
+        address: from_verification_key("seller_2_pk"),
+        datum: NoDatum,
+        reference_script: None,
+      },
+    }
+
+  let validity_range = entirely_between(1700553367000, 1700553370000)
+  expect Finite(now) = validity_range.lower_bound.bound_type
+  let (buyer_1_fee, seller_1_fee, seller_1_receive) =
+    calculate_fee(
+      cfg,
+      get_escrow_datum(oescrow_1),
+      bid_1.quantity,
+      bid_1.requested_yield,
+      now,
+    )
+  let (buyer_2_fee, seller_2_fee, seller_2_receive) =
+    calculate_fee(
+      cfg,
+      get_escrow_datum(oescrow_2),
+      bid_2.quantity,
+      bid_2.requested_yield,
+      now,
+    )
+  let (buyer_3_fee, seller_3_fee, seller_3_receive) =
+    calculate_fee(
+      cfg,
+      get_escrow_datum(oescrow_3),
+      bid_3.quantity,
+      bid_3.requested_yield,
+      now,
+    )
+  let (buyer_4_fee, seller_4_fee, seller_4_receive) =
+    calculate_fee(
+      cfg,
+      get_escrow_datum(oescrow_4),
+      bid_4.quantity,
+      bid_4.requested_yield,
+      now,
+    )
+  let (buyer_5_fee, seller_5_fee, seller_5_receive) =
+    calculate_fee(
+      cfg,
+      get_escrow_datum(oescrow_4),
+      bid_5.quantity,
+      bid_5.requested_yield,
+      now,
+    )
+  let (buyer_6_fee, seller_6_fee, seller_6_receive) =
+    calculate_fee(
+      cfg,
+      get_escrow_datum(oescrow_4),
+      bid_5.quantity,
+      bid_5.requested_yield,
+      now,
+    )
+  let bid_1_fee = seller_1_fee + buyer_1_fee
+  let bid_2_fee = seller_2_fee + buyer_2_fee
+  let bid_3_fee = seller_3_fee + buyer_3_fee
+  let bid_4_fee = seller_4_fee + buyer_4_fee
+  let bid_5_fee = seller_5_fee + buyer_5_fee
+  let bid_6_fee = seller_6_fee + buyer_6_fee
+
+  let ofee =
+    Output {
+      value: value.from_lovelace(
+        bid_1_fee + bid_2_fee + bid_3_fee + bid_4_fee + bid_5_fee + bid_6_fee,
+      ),
+      address: fee_addr,
+      datum: NoDatum,
+      reference_script: None,
+    }
+  let oseller_1 =
+    iseller_1.output
+      |> add_asset(bond_pid, bond_name_1, -bid_1.quantity)
+
+  let oseller_2 =
+    iseller_2.output
+      |> add_asset(bond_pid, bond_name_2, -bid_2.quantity)
+  let obuyer_1 =
+    Output {
+      value: value.lovelace_of(ibid_1.output.value) + value.lovelace_of(
+        ibid_2.output.value,
+      ) - bid_1_fee - bid_2_fee - seller_1_receive - seller_2_receive
+        |> value.from_lovelace
+        |> value.add(bond_pid, bond_name_2, bid_2.quantity)
+        |> value.add(bond_pid, bond_name_1, bid_1.quantity),
+      address: get_buyer_address(ibid_1.output),
+      datum: NoDatum,
+      reference_script: None,
+    }
+  let obuyer_3 =
+    Output {
+      value: value.lovelace_of(ibid_3.output.value) - bid_3_fee - seller_3_receive
+        |> value.from_lovelace
+        |> value.add(bond_pid, bond_name_3, bid_3.quantity),
+      address: get_buyer_address(ibid_3.output),
+      datum: NoDatum,
+      reference_script: None,
+    }
+  let obuyer_4 =
+    Output {
+      value: value.lovelace_of(ibid_4.output.value) - bid_4_fee - seller_4_receive
+        |> value.from_lovelace
+        |> value.add(bond_pid, bond_name_4, bid_4.quantity),
+      address: get_buyer_address(ibid_4.output),
+      datum: NoDatum,
+      reference_script: None,
+    }
+  let obuyer_5 =
+    Output {
+      value: value.lovelace_of(ibid_5.output.value) - bid_5_fee - seller_5_receive
+        |> value.from_lovelace
+        |> value.add(bond_pid, bond_name_5, bid_5.quantity),
+      address: get_buyer_address(ibid_5.output),
+      datum: NoDatum,
+      reference_script: None,
+    }
+  let obuyer_6 =
+    Output {
+      value: value.lovelace_of(ibid_6.output.value) - bid_6_fee - seller_6_receive
+        |> value.from_lovelace
+        |> value.add(bond_pid, bond_name_6, bid_6.quantity),
+      address: get_buyer_address(ibid_6.output),
+      datum: NoDatum,
+      reference_script: None,
+    }
+  let t = transaction.placeholder()
+  let tx =
+    Transaction {
+      ..t,
+      validity_range: validity_range,
+      reference_inputs: [
+        Input {
+          output_reference: OutputReference(TransactionId("es_01"), 0),
+          output: oescrow_1,
+        },
+        Input {
+          output_reference: OutputReference(TransactionId("es_02"), 0),
+          output: oescrow_2,
+        },
+        Input {
+          output_reference: OutputReference(TransactionId("es_03"), 0),
+          output: oescrow_3,
+        },
+        Input {
+          output_reference: OutputReference(TransactionId("es_04"), 0),
+          output: oescrow_4,
+        },
+        Input {
+          output_reference: OutputReference(TransactionId("es_05"), 0),
+          output: oescrow_5,
+        },
+        Input {
+          output_reference: OutputReference(TransactionId("es_06"), 0),
+          output: oescrow_6,
+        },
+      ],
+      redeemers: t.redeemers
+        |> dict.insert(
+            Spend(ibid_1.output_reference),
+            Sell {
+              exchange_fee: bid_1_fee,
+              seller_receive: seller_1_receive,
+              offers: [(bond_pid, bond_name_1, bid_1.quantity)],
+              cont_idx: None,
+            },
+            purpose_compare,
+          )
+        |> dict.insert(
+            Spend(ibid_2.output_reference),
+            Sell {
+              exchange_fee: bid_2_fee,
+              seller_receive: seller_2_receive,
+              offers: [(bond_pid, bond_name_2, bid_2.quantity)],
+              cont_idx: None,
+            },
+            purpose_compare,
+          )
+        |> dict.insert(
+            Spend(ibid_3.output_reference),
+            Sell {
+              exchange_fee: bid_3_fee,
+              seller_receive: seller_3_receive,
+              offers: [(bond_pid, bond_name_3, bid_3.quantity)],
+              cont_idx: None,
+            },
+            purpose_compare,
+          )
+        |> dict.insert(
+            Spend(ibid_4.output_reference),
+            Sell {
+              exchange_fee: bid_4_fee,
+              seller_receive: seller_4_receive,
+              offers: [(bond_pid, bond_name_4, bid_4.quantity)],
+              cont_idx: None,
+            },
+            purpose_compare,
+          )
+        |> dict.insert(
+            Spend(ibid_5.output_reference),
+            Sell {
+              exchange_fee: bid_5_fee,
+              seller_receive: seller_5_receive,
+              offers: [(bond_pid, bond_name_5, bid_5.quantity)],
+              cont_idx: None,
+            },
+            purpose_compare,
+          )
+        |> dict.insert(
+            Spend(ibid_6.output_reference),
+            Sell {
+              exchange_fee: bid_6_fee,
+              seller_receive: seller_6_receive,
+              offers: [(bond_pid, bond_name_6, bid_6.quantity)],
+              cont_idx: None,
+            },
+            purpose_compare,
+          ),
+      inputs: [
+        ibid_1,
+        ibid_2,
+        ibid_3,
+        ibid_4,
+        ibid_5,
+        ibid_6,
+        iseller_1,
+        iseller_2,
+      ],
+      outputs: [
+        obuyer_1,
+        obuyer_3,
+        obuyer_4,
+        obuyer_5,
+        obuyer_6,
+        oseller_1,
+        oseller_2,
+        ofee,
+      ],
+    }
+  multi_bid_sell.constraint(
+    ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
+    cfg,
+    bid_skh,
+  )
+}
+
 test succ_multiple_sellers_different_bonds() {
   let cfg = get_config_limit_mainnet()
   let fee_addr = cfg.exchange.fee_addr
@@ -1499,6 +1905,7 @@ test fail_doesnt_pay_enough_fee() fail {
   expect [(bond_pid, _bond_type)] = dict.values(cfg.escrow)
   let bond_name_1 = "bond_name_1"
   let bond_name_2 = "bond_name_2"
+
   let ibid_1 =
     Input {
       output_reference: OutputReference(TransactionId("tx_bid_1"), 0),
