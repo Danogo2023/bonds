@@ -62,7 +62,7 @@ pub fn constraint(
       let redeemer_dt =
         sum_redeemer_dt(
           tx,
-          bid_skh,
+          bid_sc,
           cfg,
           epo_curr,
           escrow_bond,
@@ -454,7 +454,7 @@ fn sum_input_dt(
 
 fn sum_redeemer_dt(
   tx: Transaction,
-  bid_skh: ScriptKeyHash,
+  bid_sc: Credential,
   cfg: BondConfigLimit,
   epo_curr: PosixTime,
   escrow_bond: Dict<AssetUnit, EscrowInfo>,
@@ -472,9 +472,7 @@ fn sum_redeemer_dt(
       when purpose is {
         Spend(out_ref) -> {
           expect Some(ibid) = transaction.find_input(tx.inputs, out_ref)
-          if
-          ibid.output.address.payment_credential == ScriptCredential(bid_skh){
-          
+          if ibid.output.address.payment_credential == bid_sc {
             expect ibid_dt: BidLimitMulti = data.input_datum(ibid)
             expect r: TradeAction = redeemer
 
