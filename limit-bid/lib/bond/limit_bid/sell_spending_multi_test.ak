@@ -299,6 +299,7 @@ test succ_fulfill_2_bids_same_owner_fully_by_1_seller() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
+      [],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -461,6 +462,7 @@ test succ_different_bonds() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
+      [],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -607,6 +609,7 @@ test succ_mint_bonds() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
+      [],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -758,6 +761,7 @@ test succ_when_escrows_are_included_in_both_reference_inputs_and_outputs() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
+      [],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -917,6 +921,7 @@ test succ_multiple_sellers_same_bonds() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
+      [],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -1334,6 +1339,7 @@ test succ_multiple_sellers_different_bonds_with_6_bids() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
+      [],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -1510,6 +1516,7 @@ test succ_multiple_sellers_different_bonds() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
+      [],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -1666,6 +1673,7 @@ test succ_different_bid_owners() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
+      [],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -1825,6 +1833,7 @@ test succ_spending_partially_and_fully() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
+      [],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -2006,6 +2015,7 @@ test succ_spending_partially() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
+      [],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -2169,6 +2179,7 @@ test fail_doesnt_pay_enough_fee() fail {
     ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -2308,6 +2319,7 @@ test fail_buyer_doesnt_receive_enough_bond_tokens() fail {
     ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -2449,6 +2461,7 @@ test fail_attempting_double_sastification_1() fail {
     ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -2590,6 +2603,7 @@ test fail_attempting_double_sastification_2() fail {
     ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -2729,6 +2743,7 @@ test fail_invalid_redeemer_seller_receive() fail {
     ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -2868,6 +2883,7 @@ test fail_invalid_redeemer_cont_idx() fail {
     ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -3007,6 +3023,7 @@ test fail_invalid_redeemer_exchange_fee() fail {
     ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -3181,6 +3198,7 @@ test fail_when_moving_funds_between_bids_exceeded_min_ada() fail {
     ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -3648,4 +3666,176 @@ test fail_sell_require_withdraw_not_exist_withdraw_skh() {
     ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
     multi_bid_skh,
   )
+}
+
+test fail_when_spend_deprecated_bid() fail {
+  let cfg = get_config_limit_mainnet()
+  let fee_addr = cfg.exchange.fee_addr
+  expect [(bond_pid, _bond_type)] = dict.values(cfg.escrow)
+  let bond_name = "bond_name"
+  let ibid_1 =
+    Input {
+      output_reference: OutputReference(TransactionId("tx_bid_1"), 0),
+      output: bid_like(
+        yield: 10,
+        owner: "owner_1",
+        from_epoch: 400,
+        to_epoch: 500,
+        quantity: 10,
+      ),
+    }
+  let bid_1 = get_bid_datum(ibid_1.output)
+  let ibid_2 =
+    Input {
+      output_reference: OutputReference(TransactionId("tx_bid_2"), 1),
+      output: bid_like(
+        yield: 10,
+        owner: "owner_1",
+        from_epoch: 400,
+        to_epoch: 500,
+        quantity: 10,
+      ),
+    }
+  let bid_2 = get_bid_datum(ibid_2.output)
+  let oescrow =
+    escrow_like(
+      epo_rewards: 1 * ada,
+      start: 10,
+      duration: 150,
+      bond_amount: 100,
+      bond_symbol: bond_pid,
+      token_name: bond_name,
+      buffer: 10,
+    )
+  let deprecated_bid_skh = "deprecated_bid_skh"
+  let deprecated_bid =
+    Input {
+      output_reference: OutputReference(TransactionId("tx_deprecated_bid"), 1),
+      output: Output {
+        value: value.from_lovelace(1000000),
+        address: from_script(deprecated_bid_skh),
+        datum: InlineDatum(
+          BidLimitMulti {
+            owner_vk: "owner_1",
+            owner_sk: Some(bytearray.concat("stake_", "owner_1")),
+            from_epoch: 400,
+            to_epoch: 500,
+            quantity: 10,
+            requested_yield: 100,
+            bond_types: [DanogoBond],
+          },
+        ),
+        reference_script: None,
+      },
+    }
+  let iseller =
+    Input {
+      output_reference: OutputReference(TransactionId("tx_seller"), 1),
+      output: Output {
+        value: value.from_lovelace(2 * ada)
+          |> value.add(bond_pid, bond_name, 50),
+        address: from_verification_key("seller_pk"),
+        datum: NoDatum,
+        reference_script: None,
+      },
+    }
+  let validity_range = entirely_between(1700553367000, 1700553370000)
+  expect Finite(now) = validity_range.lower_bound.bound_type
+  let (buyer_1_fee, seller_1_fee, seller_1_receive) =
+    calculate_fee(
+      cfg,
+      get_escrow_datum(oescrow),
+      bid_1.quantity,
+      bid_1.requested_yield,
+      now,
+    )
+  let (buyer_2_fee, seller_2_fee, seller_2_receive) =
+    calculate_fee(
+      cfg,
+      get_escrow_datum(oescrow),
+      bid_2.quantity,
+      bid_2.requested_yield,
+      now,
+    )
+  let bid_1_fee = seller_1_fee + buyer_1_fee
+  let bid_2_fee = seller_2_fee + buyer_2_fee
+  let ofee =
+    Output {
+      value: value.from_lovelace(bid_1_fee + bid_2_fee),
+      address: fee_addr,
+      datum: NoDatum,
+      reference_script: None,
+    }
+  let oseller =
+    iseller.output
+      |> add_asset(
+          ada_policy_id,
+          ada_asset_name,
+          seller_2_receive + seller_1_receive - seller_1_fee - seller_2_fee,
+        )
+      |> add_asset(bond_pid, bond_name, -bid_1.quantity - bid_2.quantity)
+  let obuyer_1 =
+    Output {
+      value: value.lovelace_of(ibid_1.output.value) + value.lovelace_of(
+        ibid_2.output.value,
+      ) - bid_1_fee - bid_2_fee - seller_1_receive - seller_2_receive
+        |> value.from_lovelace
+        |> value.add(bond_pid, bond_name, bid_2.quantity)
+        |> value.add(bond_pid, bond_name, bid_1.quantity),
+      address: get_buyer_address(ibid_1.output),
+      datum: NoDatum,
+      reference_script: None,
+    }
+  let t = transaction.placeholder()
+  let tx =
+    Transaction {
+      ..t,
+      validity_range: validity_range,
+      reference_inputs: [
+        Input {
+          output_reference: OutputReference(TransactionId("es_01"), 0),
+          output: oescrow,
+        },
+      ],
+      redeemers: t.redeemers
+        |> dict.insert(
+            Spend(ibid_1.output_reference),
+            Sell {
+              exchange_fee: bid_1_fee,
+              seller_receive: seller_1_receive,
+              offers: [(bond_pid, bond_name, bid_1.quantity)],
+              cont_idx: None,
+            },
+            purpose_compare,
+          )
+        |> dict.insert(
+            Spend(ibid_2.output_reference),
+            Sell {
+              exchange_fee: bid_2_fee,
+              seller_receive: seller_2_receive,
+              offers: [(bond_pid, bond_name, bid_2.quantity)],
+              cont_idx: None,
+            },
+            purpose_compare,
+          )
+        |> dict.insert(
+            WithdrawFrom(stake_credential_like(multi_bid_skh)),
+            SellMulti { bid_skh },
+            purpose_compare,
+          ),
+      inputs: [ibid_1, ibid_2, iseller, deprecated_bid],
+      outputs: [obuyer_1, oseller, ofee],
+    }
+  !and {
+    multi_bid_sell.constraint(
+      ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
+      cfg,
+      bid_skh,
+      [deprecated_bid_skh],
+    ),
+    sell.constraint(
+      ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
+      multi_bid_skh,
+    ),
+  }
 }

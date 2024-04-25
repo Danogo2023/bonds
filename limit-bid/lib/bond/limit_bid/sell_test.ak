@@ -160,6 +160,7 @@ test succ_full() {
     ScriptContext { transaction: tx, purpose: Spend(sc_in_1.output_reference) },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -290,6 +291,7 @@ test succ_partial() {
     ScriptContext { transaction: tx, purpose: Spend(sc_in_1.output_reference) },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -421,6 +423,7 @@ test fail_input_epoch_1() fail {
     ScriptContext { transaction: tx, purpose: Spend(sc_in_1.output_reference) },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -552,6 +555,7 @@ test fail_input_epoch_2() fail {
     ScriptContext { transaction: tx, purpose: Spend(sc_in_1.output_reference) },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -683,6 +687,7 @@ test fail_input_epoch_3() fail {
     ScriptContext { transaction: tx, purpose: Spend(sc_in_1.output_reference) },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -814,6 +819,7 @@ test fail_input_epoch_4() fail {
     ScriptContext { transaction: tx, purpose: Spend(sc_in_1.output_reference) },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -945,6 +951,7 @@ test fail_input_qty() fail {
     ScriptContext { transaction: tx, purpose: Spend(sc_in_1.output_reference) },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -1076,6 +1083,7 @@ test fail_output_qty() {
     ScriptContext { transaction: tx, purpose: Spend(sc_in_1.output_reference) },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -1207,6 +1215,7 @@ test fail_validity_after_not_set() fail {
     ScriptContext { transaction: tx, purpose: Spend(sc_in_1.output_reference) },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -1338,6 +1347,7 @@ test fail_escrow_policy_id_unexpect() fail {
     ScriptContext { transaction: tx, purpose: Spend(sc_in_1.output_reference) },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -1469,6 +1479,7 @@ test fail_escrow_address_unexpect() fail {
     ScriptContext { transaction: tx, purpose: Spend(sc_in_1.output_reference) },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -1600,6 +1611,7 @@ test fail_escrow_datum_not_found() fail {
     ScriptContext { transaction: tx, purpose: Spend(sc_in_1.output_reference) },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -1731,6 +1743,7 @@ test fail_escrow_datum_unexpect() fail {
     ScriptContext { transaction: tx, purpose: Spend(sc_in_1.output_reference) },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -1850,6 +1863,7 @@ test succ_bond_policy_id_valid() {
     ScriptContext { transaction: tx, purpose: Spend(sc_in_1.output_reference) },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -1981,6 +1995,7 @@ test fail_bond_policy_id_invalid() fail {
     ScriptContext { transaction: tx, purpose: Spend(sc_in_1.output_reference) },
     cfg,
     bid_skh,
+    [],
   )
 }
 
@@ -2370,5 +2385,6 @@ test succ_spend_multiple_bids_different_owners() {
     ScriptContext { transaction: tx, purpose: Spend(bid_out_ref) },
     cfg,
     #"aa1a6ce68c5b672cddff867598db3a199233fbd24e70711c882c23ea",
+    [],
   )
 }
