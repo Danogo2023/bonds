@@ -29,6 +29,8 @@ const bid_skh = "bid_1"
 
 const multi_bid_skh = "multi_bid_skh"
 
+const deprecated_bid_skh = "deprecated_bid_skh"
+
 // ================ utils =================
 fn escrow_like(
   epo_rewards: Int,
@@ -299,7 +301,7 @@ test succ_fulfill_2_bids_same_owner_fully_by_1_seller() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
-      [],
+      [deprecated_bid_skh],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -462,7 +464,7 @@ test succ_different_bonds() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
-      [],
+      [deprecated_bid_skh],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -609,7 +611,7 @@ test succ_mint_bonds() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
-      [],
+      [deprecated_bid_skh],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -761,7 +763,7 @@ test succ_when_escrows_are_included_in_both_reference_inputs_and_outputs() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
-      [],
+      [deprecated_bid_skh],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -921,7 +923,7 @@ test succ_multiple_sellers_same_bonds() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
-      [],
+      [deprecated_bid_skh],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -1339,7 +1341,7 @@ test succ_multiple_sellers_different_bonds_with_6_bids() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
-      [],
+      [deprecated_bid_skh],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -1516,7 +1518,7 @@ test succ_multiple_sellers_different_bonds() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
-      [],
+      [deprecated_bid_skh],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -1673,7 +1675,7 @@ test succ_different_bid_owners() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
-      [],
+      [deprecated_bid_skh],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -1833,7 +1835,7 @@ test succ_spending_partially_and_fully() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
-      [],
+      [deprecated_bid_skh],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -2015,7 +2017,7 @@ test succ_spending_partially() {
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
       cfg,
       bid_skh,
-      [],
+      [deprecated_bid_skh],
     ),
     sell.constraint(
       ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
@@ -2179,7 +2181,7 @@ test fail_doesnt_pay_enough_fee() fail {
     ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
     cfg,
     bid_skh,
-    [],
+    [deprecated_bid_skh],
   )
 }
 
@@ -2319,7 +2321,7 @@ test fail_buyer_doesnt_receive_enough_bond_tokens() fail {
     ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
     cfg,
     bid_skh,
-    [],
+    [deprecated_bid_skh],
   )
 }
 
@@ -2461,7 +2463,7 @@ test fail_attempting_double_sastification_1() fail {
     ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
     cfg,
     bid_skh,
-    [],
+    [deprecated_bid_skh],
   )
 }
 
@@ -2603,7 +2605,7 @@ test fail_attempting_double_sastification_2() fail {
     ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
     cfg,
     bid_skh,
-    [],
+    [deprecated_bid_skh],
   )
 }
 
@@ -2743,7 +2745,7 @@ test fail_invalid_redeemer_seller_receive() fail {
     ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
     cfg,
     bid_skh,
-    [],
+    [deprecated_bid_skh],
   )
 }
 
@@ -2883,7 +2885,7 @@ test fail_invalid_redeemer_cont_idx() fail {
     ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
     cfg,
     bid_skh,
-    [],
+    [deprecated_bid_skh],
   )
 }
 
@@ -3023,7 +3025,7 @@ test fail_invalid_redeemer_exchange_fee() fail {
     ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
     cfg,
     bid_skh,
-    [],
+    [deprecated_bid_skh],
   )
 }
 
@@ -3198,7 +3200,7 @@ test fail_when_moving_funds_between_bids_exceeded_min_ada() fail {
     ScriptContext { purpose: Spend(ibid_1.output_reference), transaction: tx },
     cfg,
     bid_skh,
-    [],
+    [deprecated_bid_skh],
   )
 }
 
@@ -3707,7 +3709,6 @@ test fail_when_spend_deprecated_bid() fail {
       token_name: bond_name,
       buffer: 10,
     )
-  let deprecated_bid_skh = "deprecated_bid_skh"
   let deprecated_bid =
     Input {
       output_reference: OutputReference(TransactionId("tx_deprecated_bid"), 1),
