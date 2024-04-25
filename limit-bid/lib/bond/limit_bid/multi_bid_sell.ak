@@ -32,7 +32,7 @@ pub fn constraint(
   ctx: ScriptContext,
   cfg: BondConfigLimit,
   bid_skh: ScriptKeyHash,
-  deprecated_bid_skh: List<ScriptKeyHash>,
+  script_blacklist: List<ScriptKeyHash>,
 ) {
   let tx = ctx.transaction
   when
@@ -47,7 +47,7 @@ pub fn constraint(
       let bid_sc = ScriptCredential(bid_skh)
       let epo_curr: EpochTime =
         posix_time_to_relative_epoch(tx_time_valid, cfg.platform.epoch)
-      let input_dt = sum_input_dt(tx, cfg, bid_sc, deprecated_bid_skh)
+      let input_dt = sum_input_dt(tx, cfg, bid_sc, script_blacklist)
       let output_dt = sum_output_dt(tx, cfg, tx_time_valid, epo_curr, bid_sc)
 
       let escrow_bond =
@@ -420,7 +420,7 @@ fn sum_input_dt(
   tx: Transaction,
   cfg: BondConfigLimit,
   bid_sc: Credential,
-  deprecated_bid_skh: List<ScriptKeyHash>,
+  script_blacklist: List<ScriptKeyHash>,
 ) -> InputDt {
   list.foldl(
     tx.inputs,
@@ -448,7 +448,7 @@ fn sum_input_dt(
               vk_input: [k, ..z.vk_input],
             }
           ScriptCredential(k) ->
-            if deprecated_bid_skh |> list.has(k) {
+            if script_blacklist |> list.has(k) {
               fail @"do not allow spend deprecated bid"
             } else {
               z

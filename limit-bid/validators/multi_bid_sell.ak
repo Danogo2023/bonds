@@ -5,7 +5,7 @@ use bond/limit_bid/types.{SellMulti, WithdrawAction} as ctypes
 use bond/types.{BondConfigLimitRaw, bond_config_limit_from_raw} as bond_types
 use common/types.{ScriptKeyHash}
 
-validator(cfg: BondConfigLimitRaw, deprecated_bid_skh: List<ScriptKeyHash>) {
+validator(cfg: BondConfigLimitRaw, script_blacklist: List<ScriptKeyHash>) {
   fn bid_multi(redeemer: WithdrawAction, ctx: ScriptContext) -> Bool {
     when ctx.purpose is {
       WithdrawFrom { .. } -> {
@@ -14,7 +14,7 @@ validator(cfg: BondConfigLimitRaw, deprecated_bid_skh: List<ScriptKeyHash>) {
           ctx,
           bond_config_limit_from_raw(cfg),
           bid_skh,
-          deprecated_bid_skh,
+          script_blacklist,
         )
       }
       _ -> False
